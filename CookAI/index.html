@@ -4,10 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CookAI — умный кулинарный помощник</title>
-  <meta property="og:image" content="https://christian-word.github.io/AICareSuite/CookAI/CookAI.png" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
   <style>
     :root {
       --primary: #FF6B6B;
@@ -408,7 +406,48 @@
       justify-content: center;
       gap: 8px;
     }
-    
+.footer-note {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 16px;
+}
+
+.footer-text {
+  margin-bottom: 8px;
+}
+
+.footer-copyright {
+  font-size: 13px;
+  color: var(--text-lighter);
+  margin-top: 8px;
+}
+
+@media (max-width: 768px) {
+  .footer-note {
+    padding: 12px;
+  }
+  
+  .footer-note i {
+    margin-bottom: 8px;
+  }
+  
+  .footer-text, .footer-copyright {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .footer-note {
+    padding: 10px;
+  }
+  
+  .footer-copyright {
+    font-size: 12px;
+  }
+}
     /* Responsive */
     @media (max-width: 768px) {
       body {
@@ -577,11 +616,11 @@
       </div>
     </div>
 
-    <div class="footer-note">
-      <i class="fas fa-info-circle"></i>
-      Все рецепты являются рекомендациями. Корректируйте ингредиенты и пропорции под свои предпочтения и диетические ограничения.
-    </div>
-  </div>
+<div class="footer-note">
+  <i class="fas fa-info-circle"></i>
+  <div class="footer-text">Все рецепты являются рекомендациями. Корректируйте ингредиенты и пропорции под свои предпочтения и диетические ограничения.</div>
+  <div class="footer-copyright">г. Суми, (версия 1.0) © 2025</div>
+</div>
 
   <script>
     const encrypted = "Z3NrX1NUelQyS1FFQko3MGNDb1hDSllaV0dkeWIzRlk5OHJHN2xvWXUxSmc1SnV0VFZOSzIyVHY=";
