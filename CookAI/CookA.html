@@ -1,1 +1,493 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CookAI — кулинарный помощник</title>
+  <style>
+    :root {
+      --primary-color: #e74c3c;
+      --secondary-color: #fadbd8;
+      --text-dark: #2c3e50;
+      --text-light: #ffffff;
+      --warning-bg: #fff8e6;
+    }
+    
+    body { 
+      font-family: 'Arial', sans-serif; 
+      background: #f9f2e8;
+      padding: 10px;
+      color: var(--text-dark);
+      line-height: 1.6;
+    }
+    
+    #app {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(231, 76, 60, 0.1);
+      overflow: hidden;
+    }
+    
+    .header {
+      background: var(--primary-color);
+      color: var(--text-light);
+      padding: 15px;
+      text-align: center;
+      position: relative;
+    }
+    
+    .header-actions {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      gap: 5px;
+    }
+    
+    .header-action-btn {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+    
+    .header-action-btn:hover {
+      background: rgba(255,255,255,0.3);
+    }
+    
+    .tab-buttons {
+      display: flex;
+      background: var(--secondary-color);
+      flex-wrap: wrap;
+    }
+    
+    .tab-btn {
+      flex: 1;
+      padding: 12px 5px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s;
+      color: var(--text-dark);
+      min-width: 100px;
+      font-size: 14px;
+    }
+    
+    .tab-btn.active {
+      background: var(--primary-color);
+      color: var(--text-light);
+    }
+    
+    .tab-content {
+      padding: 15px;
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    input, textarea, select {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      box-sizing: border-box;
+      font-size: 16px;
+    }
+    
+    textarea {
+      height: 100px;
+      resize: vertical;
+    }
+    
+    button {
+      background: var(--primary-color);
+      color: var(--text-light);
+      border: none;
+      padding: 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      width: 100%;
+      font-size: 16px;
+      margin-top: 10px;
+      transition: background 0.3s;
+    }
+    
+    button:hover {
+      background: #c0392b;
+    }
+    
+    .message {
+      margin: 15px 0;
+      padding: 12px;
+      border-radius: 8px;
+      line-height: 1.5;
+      font-size: 15px;
+    }
+    
+    .bot-message {
+      background: #eaf7ee;
+      border-left: 4px solid #27ae60;
+    }
 
+    .bot-message h4 {
+      color: var(--primary-color);
+      margin: 15px 0 8px 0;
+    }
+
+    .step {
+      color: #e74c3c;
+      font-weight: bold;
+      margin-right: 8px;
+    }
+
+    .ingredient {
+      color: #27ae60;
+      font-weight: bold;
+      margin-right: 8px;
+    }
+
+    .bot-message strong {
+      color: #2c3e50;
+    }
+
+    .warning {
+      font-size: 13px;
+      color: #666;
+      margin-top: 15px;
+      padding: 10px;
+      background: var(--warning-bg);
+      border-radius: 5px;
+      text-align: center;
+    }
+    
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    
+    .action-buttons button {
+      flex: 1;
+      padding: 8px;
+      font-size: 14px;
+    }
+    
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      .tab-content.active, .tab-content.active * {
+        visibility: visible;
+      }
+      .tab-content.active {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        padding: 20px;
+      }
+      input, textarea, select, button {
+        display: none;
+      }
+    }
+    
+    @media (max-width: 600px) {
+      .tab-btn {
+        padding: 10px 5px;
+        font-size: 13px;
+        min-width: 80px;
+      }
+      
+      .header h1 {
+        font-size: 22px;
+      }
+      
+      .header p {
+        font-size: 14px;
+      }
+      
+      .tab-content {
+        padding: 10px;
+      }
+      
+      input, textarea, select, button {
+        font-size: 14px;
+        padding: 8px;
+      }
+      
+      .action-buttons {
+        flex-direction: column;
+      }
+      
+      .header-actions {
+        top: 5px;
+        right: 5px;
+      }
+      
+      .header-action-btn {
+        width: 25px;
+        height: 25px;
+        font-size: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="header">
+      <div class="header-actions">
+        <button class="header-action-btn" title="Печать" onclick="printCurrentTab()">🖨️</button>
+        <button class="header-action-btn" title="Сохранить" onclick="saveCurrentTab()">💾</button>
+      </div>
+      <h1>CookAI</h1>
+      <p>Ваш интеллектуальный помощник в кулинарии</p>
+    </div>
+
+    <div class="tab-buttons">
+      <button class="tab-btn active" onclick="openTab('recipes')">Рецепты</button>
+      <button class="tab-btn" onclick="openTab('ingredients')">По ингредиентам</button>
+      <button class="tab-btn" onclick="openTab('diet')">Для диеты</button>
+      <button class="tab-btn" onclick="openTab('tips')">Советы</button>
+    </div>
+
+    <div id="recipes" class="tab-content active">
+      <h3>Поиск рецептов</h3>
+      <input type="text" id="dish-name" placeholder="Название блюда (например, паста карбонара)">
+      <button onclick="searchRecipe()">Найти рецепт</button>
+      <div id="recipes-result"></div>
+    </div>
+
+    <div id="ingredients" class="tab-content">
+      <h3>Что приготовить?</h3>
+      <textarea id="ingredients-list" placeholder="Какие ингредиенты есть? (например, курица, рис, помидоры)"></textarea>
+      <button onclick="searchByIngredients()">Подобрать рецепты</button>
+      <div id="ingredients-result"></div>
+    </div>
+
+    <div id="diet" class="tab-content">
+      <h3>Рецепты по dietary</h3>
+      <select id="diet-type">
+        <option value="vegetarian">Вегетарианские</option>
+        <option value="vegan">Веганские</option>
+        <option value="low-carb">Низкоуглеводные</option>
+        <option value="gluten-free">Без глютена</option>
+      </select>
+      <button onclick="searchDietRecipes()">Найти</button>
+      <div id="diet-result"></div>
+    </div>
+
+    <div id="tips" class="tab-content">
+      <h3>Кулинарные лайфхаки</h3>
+      <input type="text" id="tip-topic" placeholder="О чем совет? (например, как сделать соус гуще)">
+      <button onclick="getCookingTip()">Узнать</button>
+      <div id="tips-result"></div>
+    </div>
+
+    <div class="warning">
+      👨‍🍳 Совет: Все рецепты приблизительные. Корректируйте ингредиенты под свои вкусы и аллергии!
+    </div>
+  </div>
+
+  <script>
+    const encrypted = "Z3NrX1NUelQyS1FFQko3MGNDb1hDSllaV0dkeWIzRlk5OHJHN2xvWXUxSmc1SnV0VFZOSzIyVHY=";
+    const API_KEY = atob(encrypted);
+    const MODEL_NAME = "meta-llama/llama-4-maverick-17b-128e-instruct";
+    let currentTab = 'recipes';
+
+    const SYSTEM_PROMPT = `Ты — профессиональный шеф-помощник CookAI. Форматируй ответы по шаблону:
+
+### 🍳 **Название блюда**
+Краткое описание (1 предложение).  
+⏱ Время: XX мин | 🥄 Сложность: X/5 | 🔥 Калории: ~XX ккал/порция
+
+### 📜 **Ингредиенты** (точные пропорции!):
+- **Основное**: 
+  - Ингредиент 1 — XX г/мл/шт. (важные нюансы)
+  - Ингредиент 2 — XX г
+- **Для соуса/декора**: 
+  - Доп. ингредиент — XX г
+
+### 👨‍🍳 **Шаги**:
+1. **Шаг 1**: Описание (температура, время, техника).  
+   *Пример*: "Обжаривайте лук 3 мин до прозрачности".
+2. **Шаг 2**: ... 
+
+### 💡 **Советы**:
+- Лайфхак 1 (например, "Как избежать комков").
+- *Важно*: Предупреждения (аллергены, ошибки).
+
+### 🔄 **Альтернативы**:
+- Для веганов: замена X → Y.
+- Без глютена: используйте Z.`;
+
+    function openTab(tabName) {
+      const tabs = document.querySelectorAll('.tab-content');
+      tabs.forEach(tab => tab.classList.remove('active'));
+      
+      const buttons = document.querySelectorAll('.tab-btn');
+      buttons.forEach(btn => btn.classList.remove('active'));
+      
+      document.getElementById(tabName).classList.add('active');
+      event.currentTarget.classList.add('active');
+      currentTab = tabName;
+    }
+
+    function formatResponse(text) {
+      let formattedText = text;
+      formattedText = formattedText.replace(/### 🍳 \*\*(.*?)\*\*/g, '<h3>🍳 $1</h3>');
+      formattedText = formattedText.replace(/### 📜 \*\*Ингредиенты\*\*/g, '<h4>📜 Ингредиенты</h4>');
+      formattedText = formattedText.replace(/### 👨‍🍳 \*\*Шаги\*\*/g, '<h4>👨‍🍳 Шаги</h4>');
+      formattedText = formattedText.replace(/### 💡 \*\*Советы\*\*/g, '<h4>💡 Советы</h4>');
+      formattedText = formattedText.replace(/### 🔄 \*\*Альтернативы\*\*/g, '<h4>🔄 Альтернативы</h4>');
+      formattedText = formattedText.replace(/\n- \*\*(.*?)\*\* — (.*?)(\n|$)/g, '<br><span class="ingredient">-</span> <strong>$1</strong> — $2');
+      formattedText = formattedText.replace(/\n\d+\. \*\*(.*?)\*\*: (.*?)(\n|$)/g, '<br><span class="step">$1.</span> $2');
+      formattedText = formattedText.replace(/\*Важно\*:/g, '⚠️ <strong>Важно:</strong>');
+      formattedText = formattedText.replace(/⏱/g, '⏱ <strong>');
+      formattedText = formattedText.replace(/\|/g, '</strong> | ');
+      formattedText = formattedText.replace(/(🥄|🔥)/g, '<strong>$1');
+      formattedText = formattedText.replace(/(~XX ккал\/порция)/g, '$1</strong>');
+      formattedText = formattedText.replace(/\n/g, '<br>');
+      return formattedText;
+    }
+
+    function printCurrentTab() {
+      window.print();
+    }
+
+    function saveCurrentTab() {
+      const tabContent = document.getElementById(currentTab);
+      let content = tabContent.querySelector('h3').textContent + "\n\n";
+      
+      const resultDiv = tabContent.querySelector('div[id$="-result"]');
+      if (resultDiv && resultDiv.textContent.trim() !== '') {
+        content += resultDiv.textContent;
+      } else {
+        content += tabContent.textContent;
+      }
+      
+      const blob = new Blob([content], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `cookai-${currentTab}-${new Date().toISOString().slice(0,10)}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    async function queryGroq(messages) {
+      try {
+        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${API_KEY}`
+          },
+          body: JSON.stringify({
+            model: MODEL_NAME,
+            messages: messages,
+            temperature: 0.7,
+            max_tokens: 1024
+          })
+        });
+        const data = await response.json();
+        return data.choices[0].message.content;
+      } catch (error) {
+        console.error("Ошибка API:", error);
+        return "⚠️ Ошибка при обработке запроса. Попробуйте позже.";
+      }
+    }
+
+    async function searchRecipe() {
+      const dishName = document.getElementById('dish-name').value;
+      if (!dishName) {
+        alert("Введите название блюда");
+        return;
+      }
+
+      const resultDiv = document.getElementById('recipes-result');
+      resultDiv.innerHTML = '<div class="message">🍳 Ищем рецепт...</div>';
+
+      const messages = [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: `Дай рецепт: ${dishName}. Строго следуй шаблону из промпта.` }
+      ];
+
+      const response = await queryGroq(messages);
+      const formattedResponse = formatResponse(response);
+      resultDiv.innerHTML = `<div class="message bot-message">${formattedResponse}</div>`;
+    }
+
+    async function searchByIngredients() {
+      const ingredients = document.getElementById('ingredients-list').value;
+      if (!ingredients) {
+        alert("Введите ингредиенты");
+        return;
+      }
+
+      const resultDiv = document.getElementById('ingredients-result');
+      resultDiv.innerHTML = '<div class="message">🔍 Подбираем рецепты...</div>';
+
+      const messages = [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: `Что можно приготовить из: ${ingredients}? Дай 3 варианта в формате: "1. Название блюда (время, сложность) + ключевые ингредиенты".` }
+      ];
+
+      const response = await queryGroq(messages);
+      const formattedResponse = formatResponse(response);
+      resultDiv.innerHTML = `<div class="message bot-message">${formattedResponse}</div>`;
+    }
+
+    async function searchDietRecipes() {
+      const dietType = document.getElementById('diet-type').value;
+      const dietName = document.getElementById('diet-type').options[document.getElementById('diet-type').selectedIndex].text;
+
+      const resultDiv = document.getElementById('diet-result');
+      resultDiv.innerHTML = '<div class="message">🥗 Ищем рецепты для ' + dietName + '...</div>';
+
+      const messages = [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: `Дай 3 ${dietName} рецепта. Для каждого укажи: название, время, ингредиенты и 1 ключевой совет.` }
+      ];
+
+      const response = await queryGroq(messages);
+      const formattedResponse = formatResponse(response);
+      resultDiv.innerHTML = `<div class="message bot-message">${formattedResponse}</div>`;
+    }
+
+    async function getCookingTip() {
+      const tipTopic = document.getElementById('tip-topic').value;
+      if (!tipTopic) {
+        alert("Введите тему совета");
+        return;
+      }
+
+      const resultDiv = document.getElementById('tips-result');
+      resultDiv.innerHTML = '<div class="message">🧠 Готовим совет...</div>';
+
+      const messages = [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: `Дай профессиональный совет на тему: "${tipTopic}". Включи: 1) Суть проблемы 2) Решение 3) Лайфхак.` }
+      ];
+
+      const response = await queryGroq(messages);
+      const formattedResponse = formatResponse(response);
+      resultDiv.innerHTML = `<div class="message bot-message">${formattedResponse}</div>`;
+    }
+  </script>
+</body>
+</html>
