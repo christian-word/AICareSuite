@@ -228,6 +228,43 @@
             border-top: 1px solid #eee;
         }
 
+.forecast-item {
+    text-align: center;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: var(--light);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.forecast-date {
+    font-size: 12px;
+    color: #666;
+}
+
+.forecast-details {
+    font-size: 12px;
+    text-align: left;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed #ddd;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.forecast-details div {
+    display: flex;
+    justify-content: space-between;
+}
+
+.forecast-details div::after {
+    content: "";
+    flex: 1;
+    margin-left: 5px;
+    border-bottom: 1px dotted #ccc;
+}
         /* Адаптация для планшетов */
         @media (min-width: 600px) {
             .weather-display {
@@ -462,73 +499,100 @@
                 visibilityElement.textContent = `Видимость: ${data.visibility / 1000} км`;
             }
             
-            function displayForecast(data) {
-                forecastContainer.innerHTML = '';
-                
-                // Группируем прогноз по дням
-                const dailyForecast = {};
-                data.list.forEach(item => {
-                    const date = new Date(item.dt * 1000);
-                    const dateKey = date.toISOString().split('T')[0];
-                    
-                    if (!dailyForecast[dateKey]) {
-                        dailyForecast[dateKey] = {
-                            date: date,
-                            temps: [],
-                            icons: [],
-                            descriptions: []
-                        };
-                    }
-                    
-                    dailyForecast[dateKey].temps.push(item.main.temp);
-                    dailyForecast[dateKey].icons.push(item.weather[0].icon);
-                    dailyForecast[dateKey].descriptions.push(item.weather[0].description);
-                });
-                
-                // Отображаем прогноз на 5 дней
-                const forecastDays = Object.values(dailyForecast).slice(0, 5);
-                
-                forecastDays.forEach((dayData, index) => {
-                    const maxTemp = Math.round(Math.max(...dayData.temps));
-                    const minTemp = Math.round(Math.min(...dayData.temps));
-                    const date = dayData.date;
-                    
-                    // Выбираем наиболее частую иконку
-                    const iconCounts = {};
-                    dayData.icons.forEach(icon => {
-                        iconCounts[icon] = (iconCounts[icon] || 0) + 1;
-                    });
-                    const mostCommonIcon = Object.keys(iconCounts).reduce((a, b) => 
-                        iconCounts[a] > iconCounts[b] ? a : b
-                    );
-                    
-                    // Форматируем название дня недели
-                    let dayName;
-                    if (index === 0) {
-                        dayName = "Сегодня";
-                    } else if (index === 1) {
-                        dayName = "Завтра";
-                    } else {
-                        dayName = date.toLocaleDateString('ru-RU', { weekday: 'long' });
-                        dayName = dayName.charAt(0).toUpperCase() + dayName.slice(1);
-                    }
-                    
-                    // Создаем элемент прогноза
-                    const forecastItem = document.createElement('div');
-                    forecastItem.className = 'forecast-item';
-                    forecastItem.innerHTML = `
-                        <div class="forecast-day">${dayName}</div>
-                        <img src="https://openweathermap.org/img/wn/${mostCommonIcon}.png" 
-                             alt="${dayData.descriptions[0]}">
-                        <div class="forecast-temp">
-                            <span class="high">${maxTemp}${getUnitSymbol()}</span>
-                            <span class="low">${minTemp}${getUnitSymbol()}</span>
-                        </div>
-                    `;
-                    
-                    forecastContainer.appendChild(forecastItem);
-                });
-            }
+ function displayForecast(data) {
+    forecastContainer.innerHTML = '';
+    
+    // Группируем прогноз по дням
+    const dailyForecast = {};
+    data.list.forEach(item => {
+        const date = new Date(item.dt * 1000);
+        const dateKey = date.toLocaleDateString('ru-RU');
+        
+        if (!dailyForecast[dateKey]) {
+            dailyForecast[dateKey] = {
+                date: date,
+                temps: [],
+                feels_like: [],
+                icons: [],
+                descriptions: [],
+                humidity: [],
+                wind: [],
+                pressure: []
+            };
+        }
+        
+        dailyForecast[dateKey].temps.push(item.main.temp);
+        dailyForecast[dateKey].feels_like.push(item.main.feels_like);
+        dailyForecast[dateKey].icons.push(item.weather[0].icon);
+        dailyForecast[dateKey].descriptions.push(item.weather[0].description);
+        dailyForecast[dateKey].humidity.push(item.main.humidity);
+        dailyForecast[dateKey].wind.push(item.wind.speed);
+        dailyForecast[dateKey].pressure.push(item.main.pressure);
+    });
+
+    // Получаем первые 5 дней
+    const forecastDays = Object.values(dailyForecast).slice(0, 5);
+    
+    forecastDays.forEach((dayData, index) => {
+        const maxTemp = Math.round(Math.max(...dayData.temps));
+        const minTemp = Math.round(Math.min(...dayData.temps));
+        const avgFeelsLike = Math.round(dayData.feels_like.reduce((a, b) => a + b, 0) / dayData.feels_like.length);
+        const avgHumidity = Math.round(dayData.humidity.reduce((a, b) => a + b, 0) / dayData.humidity.length);
+        const avgWind = (dayData.wind.reduce((a, b) => a + b, 0) / dayData.wind.length).toFixed(1);
+        const avgPressure = Math.round(dayData.pressure.reduce((a, b) => a + b, 0) / dayData.pressure.length);
+        const date = dayData.date;
+        
+        // Выбираем наиболее частую иконку и описание
+        const iconCounts = {};
+        dayData.icons.forEach(icon => {
+            iconCounts[icon] = (iconCounts[icon] || 0) + 1;
+        });
+        const mostCommonIcon = Object.keys(iconCounts).reduce((a, b) => 
+            iconCounts[a] > iconCounts[b] ? a : b
+        );
+        
+        const descCounts = {};
+        dayData.descriptions.forEach(desc => {
+            descCounts[desc] = (descCounts[desc] || 0) + 1;
+        });
+        const mostCommonDesc = Object.keys(descCounts).reduce((a, b) => 
+            descCounts[a] > descCounts[b] ? a : b
+        );
+
+        // Форматируем название дня недели
+        let dayName;
+        if (index === 0) {
+            dayName = "Сегодня";
+        } else if (index === 1) {
+            dayName = "Завтра";
+        } else {
+            dayName = date.toLocaleDateString('ru-RU', { weekday: 'long' });
+            dayName = dayName.charAt(0).toUpperCase() + dayName.slice(1);
+        }
+        
+        // Создаем элемент прогноза
+        const forecastItem = document.createElement('div');
+        forecastItem.className = 'forecast-item';
+        forecastItem.innerHTML = `
+            <div class="forecast-day">${dayName}</div>
+            <div class="forecast-date">${date.toLocaleDateString('ru-RU')}</div>
+            <img src="https://openweathermap.org/img/wn/${mostCommonIcon}.png" 
+                 alt="${mostCommonDesc}" title="${mostCommonDesc}">
+            <div class="forecast-temp">
+                <span class="high">${maxTemp}${getUnitSymbol()}</span>
+                <span class="low">${minTemp}${getUnitSymbol()}</span>
+            </div>
+            <div class="forecast-details">
+                <div>Ощущается: ${avgFeelsLike}${getUnitSymbol()}</div>
+                <div>Влажность: ${avgHumidity}%</div>
+                <div>Ветер: ${avgWind} ${units === 'metric' ? 'м/с' : 'миль/ч'}</div>
+                <div>Давление: ${avgPressure} hPa</div>
+            </div>
+        `;
+        
+        forecastContainer.appendChild(forecastItem);
+    });
+}
             
             function updateFavoritesList() {
                 favoritesContainer.innerHTML = '';
