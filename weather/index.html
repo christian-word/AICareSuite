@@ -1,681 +1,349 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Подробный прогноз погоды</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
-    <style>
-        /* Основные стили */
-        :root {
-            --primary: #4285f4;
-            --secondary: #34a853;
-            --danger: #ea4335;
-            --light: #f8f9fa;
-            --dark: #202124;
-        }
-        
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        
-        body {
-            font-family: 'Roboto', sans-serif;
-            line-height: 1.6;
-            color: var(--dark);
-            background-color: #f5f5f5;
-            padding: 15px;
-            min-height: 100vh;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        header {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #ddd;
-        }
-        
-        h1 {
-            color: var(--primary);
-            font-size: 24px;
-            text-align: center;
-        }
-        
-        /* Стили для поиска */
-        .search-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        
-        input, button, select {
-            padding: 10px 15px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
-        }
-        
-        input {
-            flex: 1;
-            min-width: 200px;
-        }
-        
-        button {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            white-space: nowrap;
-        }
-        
-        button:hover {
-            background-color: #3367d6;
-        }
-        
-        button.secondary {
-            background-color: var(--secondary);
-        }
-        
-        /* Стили для текущей погоды */
-        .current-weather {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .current-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        
-        .current-main {
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .temp {
-            font-size: 48px;
-            font-weight: 300;
-            margin-right: 20px;
-        }
-        
-        .weather-icon {
-            width: 80px;
-            height: 80px;
-        }
-        
-        .weather-details {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-        
-        .detail-item {
-            display: flex;
-            align-items: center;
-        }
-        
-        /* Стили для прогноза */
-        .forecast {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .forecast-toggle {
-            display: flex;
-            justify-content: center;
-            margin: 15px 0;
-            gap: 10px;
-        }
-        
-        .forecast-toggle button {
-            padding: 8px 15px;
-            background: #f0f0f0;
-            color: #333;
-            border: 1px solid #ddd;
-        }
-        
-        .forecast-toggle button.active {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-        
-        .forecast-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-        
-        .forecast-item {
-            text-align: center;
-            padding: 15px;
-            border-radius: 8px;
-            background-color: var(--light);
-        }
-        
-        .forecast-day {
-            font-weight: 500;
-            margin-bottom: 10px;
-        }
-        
-        .forecast-temp {
-            display: flex;
-            justify-content: space-around;
-            margin-top: 10px;
-        }
-        
-        .high {
-            color: var(--danger);
-        }
-        
-        .low {
-            color: var(--primary);
-        }
-        
-        /* Стили для почасового прогноза */
-        .hourly-forecast {
-            display: none;
-            margin-top: 20px;
-            overflow-x: auto;
-            background: white;
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .hourly-container {
-            display: flex;
-            gap: 10px;
-            padding: 10px 0;
-        }
-        
-        .hourly-item {
-            min-width: 100px;
-            padding: 10px;
-            background: var(--light);
-            border-radius: 8px;
-            text-align: center;
-        }
-        
-        .hourly-time {
-            font-weight: 500;
-            margin-bottom: 5px;
-        }
-        
-        .hourly-temp {
-            font-size: 18px;
-            margin: 5px 0;
-        }
-        
-        .hourly-icon {
-            width: 50px;
-            height: 50px;
-            margin: 5px auto;
-        }
-        
-        /* Стили для избранного */
-        .favorites {
-            margin-top: 30px;
-        }
-        
-        .favorites-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        
-        .favorite-item {
-            background-color: white;
-            padding: 8px 15px;
-            border-radius: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            cursor: pointer;
-        }
-        
-        /* Футер */
-        footer {
-            text-align: center;
-            margin-top: 40px;
-            padding: 20px 0;
-            color: #666;
-            font-size: 14px;
-            border-top: 1px solid #eee;
-        }
-.forecast-details div {
-    font-size: 14px;
-    margin-top: 4px;
-}
-       
-        /* Адаптация для мобильных */
-        @media (max-width: 768px) {
-            .weather-details {
-                grid-template-columns: 1fr;
-            }
-            
-            .forecast-list {
-                grid-template-columns: 1fr;
-            }
-            
-            .hourly-item {
-                min-width: 80px;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Продвинутый трекер погоды</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #4285f4;
+      --secondary: #34a853;
+      --danger: #ea4335;
+      --light: #f8f9fa;
+      --dark: #202124;
+    }
+    :root[data-theme='dark'] {
+      --primary: #8ab4f8;
+      --secondary: #81c995;
+      --danger: #f28b82;
+      --light: #202124;
+      --dark: #e8eaed;
+      background-color: #121212;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Roboto', sans-serif;
+      line-height: 1.6;
+      color: var(--dark);
+      background-color: var(--light);
+      padding: 15px;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    header {
+      display: flex; flex-direction: column; gap: 10px;
+      margin-bottom: 20px; padding-bottom: 15px;
+      border-bottom: 1px solid #ddd;
+    }
+    h1 { color: var(--primary); font-size: 24px; text-align: center; }
+    input, button, select {
+      padding: 10px 15px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px;
+    }
+    button { background: var(--primary); color: white; border: none; cursor: pointer; }
+    button:hover { background: #3367d6; }
+    button.secondary { background: var(--secondary); }
+    .search-container { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
+    input { flex: 1; min-width: 200px; }
+    .current-weather, .forecast, .hourly-forecast {
+      background: var(--light); border-radius: 8px; padding: 20px;
+      margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .hourly-list {
+      display: flex;
+      overflow-x: auto;
+      gap: 15px;
+      margin-top: 20px;
+      padding-bottom: 10px;
+    }
+    .hourly-item {
+      min-width: 100px;
+      text-align: center;
+      padding: 10px;
+      background: var(--light);
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .forecast-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .forecast-item {
+      text-align: center;
+      padding: 15px;
+      background: var(--light);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .forecast-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+    }
+    .forecast-day {
+      font-weight: 500;
+      font-size: 18px;
+      margin-bottom: 5px;
+      color: var(--primary);
+    }
+    .forecast-date {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 10px;
+    }
+    .forecast-temp {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 10px 0;
+      font-size: 18px;
+    }
+    .forecast-temp .high {
+      font-weight: 500;
+      color: var(--danger);
+    }
+    .forecast-temp .low {
+      color: var(--primary);
+    }
+    .forecast-details {
+      margin-top: 10px;
+      text-align: center;
+      font-size: 14px;
+      line-height: 1.6;
+      width: 100%;
+    }
+    .forecast-details div {
+      padding: 4px 0;
+      border-top: 1px solid #eee;
+    }
+    .weather-icon {
+      width: 50px;
+      height: 50px;
+      margin: 5px 0;
+    }
+    .favorites-list { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+    .favorite-item {
+      background-color: white; padding: 8px 15px; border-radius: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer;
+    }
+    footer {
+      text-align: center; margin-top: 40px; padding: 20px 0; color: #666;
+      font-size: 14px; border-top: 1px solid #eee;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Продвинутый трекер погоды</h1>
-            <div>
-                <select id="unit-select">
-                    <option value="metric">°C, м/с</option>
-                    <option value="imperial">°F, миль/ч</option>
-                </select>
-            </div>
-        </header>
-        
-        <div class="search-container">
-            <input type="text" id="city-input" placeholder="Введите город">
-            <button id="search-btn">Поиск</button>
-            <button id="add-favorite-btn" class="secondary">★ Добавить в избранное</button>
-        </div>
-        
-        <div id="error-message" class="error hidden"></div>
-        
-        <div class="current-weather">
-            <div class="current-header">
-                <h2 id="current-city">Город</h2>
-                <span id="current-date">Дата</span>
-            </div>
-            <div class="current-main">
-                <div class="temp" id="current-temp">0°C</div>
-                <img id="current-weather-icon" class="weather-icon" src="" alt="Weather Icon">
-                <div>
-                    <div id="current-description">Описание</div>
-                    <div id="current-feels-like">Ощущается как: 0°C</div>
-                </div>
-            </div>
-            <div class="weather-details">
-                <div class="detail-item">
-                    <span class="detail-icon">💧</span>
-                    <span id="humidity">Влажность: 0%</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-icon">🌬</span>
-                    <span id="wind">Ветер: 0 м/с</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-icon">📊</span>
-                    <span id="pressure">Давление: 0 hPa</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-icon">👀</span>
-                    <span id="visibility">Видимость: 0 км</span>
-                </div>
-            </div>
-        </div>
-        
-        <div class="forecast">
-            <h3>Прогноз на 5 дней</h3>
-            <div class="forecast-toggle">
-                <button id="daily-btn" class="active">По дням</button>
-                <button id="hourly-btn">По часам</button>
-            </div>
-            <div class="forecast-list" id="forecast-container">
-                <!-- Прогноз будет здесь -->
-            </div>
-            <div class="hourly-forecast" id="hourly-forecast">
-                <div class="hourly-container" id="hourly-container">
-                    <!-- Почасовой прогноз будет здесь -->
-                </div>
-            </div>
-        </div>
-        
-        <div class="favorites">
-            <h3>Избранные города</h3>
-            <div class="favorites-list" id="favorites-container">
-                <!-- Избранные города будут здесь -->
-            </div>
-        </div>
-
-        <footer>
-            г. Сумы, (версия 1.0) © 2025
-        </footer>
+  <div class="container">
+    <header>
+      <h1>Продвинутый трекер погоды</h1>
+      <div>
+        <select id="unit-select">
+          <option value="metric">°C, м/с</option>
+          <option value="imperial">°F, миль/ч</option>
+        </select>
+      </div>
+    </header>
+    <div class="search-container">
+      <input type="text" id="city-input" placeholder="Введите город">
+      <button id="search-btn">Поиск</button>
+      <button id="geo-btn">📍 Местоположение</button>
+      <button id="add-favorite-btn" class="secondary">★ Добавить</button>
     </div>
+    <div class="current-weather">
+      <h2 id="current-city">Город</h2>
+      <div id="current-date">Дата</div>
+      <div id="current-temp">0°C</div>
+      <img id="current-weather-icon" src="" alt="Погода">
+      <div id="current-description"></div>
+      <div id="current-feels-like"></div>
+      <div id="humidity"></div>
+      <div id="wind"></div>
+      <div id="pressure"></div>
+      <div id="visibility"></div>
+    </div>
+    <div class="hourly-forecast">
+      <h3>Почасовой прогноз</h3>
+      <div class="hourly-list" id="hourly-container"></div>
+    </div>
+    <div class="forecast">
+      <h3>Прогноз на 5 дней</h3>
+      <div class="forecast-list" id="forecast-container"></div>
+    </div>
+    <div class="favorites">
+      <h3>Избранные города</h3>
+      <div class="favorites-list" id="favorites-container"></div>
+    </div>
+    <footer>г. Сумы, (версия 1.2) © 2025</footer>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const apiKey = atob("MzEyOTMxMDEwYWZhNWQ3OGI4N2I0MzY4NGRjYmMyYTA=");
+      let currentCity = localStorage.getItem('lastCity') || 'Сумы';
+      let units = 'metric';
+      let favorites = JSON.parse(localStorage.getItem('weatherFavorites')) || [];
+      const cityInput = document.getElementById('city-input');
+      const forecastContainer = document.getElementById('forecast-container');
+      const hourlyContainer = document.getElementById('hourly-container');
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Конфигурация
-            const encrypted = "MzEyOTMxMDEwYWZhNWQ3OGI4N2I0MzY4NGRjYmMyYTA=";
-            const apiKey = atob(encrypted);
-            let currentCity = 'Сумы';
-            let units = 'metric';
-            let favorites = JSON.parse(localStorage.getItem('weatherFavorites')) || [];
-            let currentForecastType = 'daily';
-            let hourlyForecastData = [];
-            
-            // Элементы DOM
-            const cityInput = document.getElementById('city-input');
-            const searchBtn = document.getElementById('search-btn');
-            const addFavoriteBtn = document.getElementById('add-favorite-btn');
-            const unitSelect = document.getElementById('unit-select');
-            const errorMessage = document.getElementById('error-message');
-            
-            // Текущая погода
-            const currentCityElement = document.getElementById('current-city');
-            const currentDateElement = document.getElementById('current-date');
-            const currentTempElement = document.getElementById('current-temp');
-            const currentWeatherIcon = document.getElementById('current-weather-icon');
-            const currentDescription = document.getElementById('current-description');
-            const currentFeelsLike = document.getElementById('current-feels-like');
-            const humidityElement = document.getElementById('humidity');
-            const windElement = document.getElementById('wind');
-            const pressureElement = document.getElementById('pressure');
-            const visibilityElement = document.getElementById('visibility');
-            
-            // Прогноз
-            const forecastContainer = document.getElementById('forecast-container');
-            const hourlyForecast = document.getElementById('hourly-forecast');
-            const hourlyContainer = document.getElementById('hourly-container');
-            
-            // Избранное
-            const favoritesContainer = document.getElementById('favorites-container');
-            
-            // Кнопки переключения
-            const dailyBtn = document.getElementById('daily-btn');
-            const hourlyBtn = document.getElementById('hourly-btn');
-            
-            // Инициализация
-            updateFavoritesList();
-            getWeather(currentCity);
-            
-            // События
-            searchBtn.addEventListener('click', () => {
-                const city = cityInput.value.trim();
-                if (city) {
-                    getWeather(city);
-                }
-            });
-            
-            addFavoriteBtn.addEventListener('click', () => {
-                if (currentCity && !favorites.includes(currentCity)) {
-                    favorites.push(currentCity);
-                    localStorage.setItem('weatherFavorites', JSON.stringify(favorites));
-                    updateFavoritesList();
-                }
-            });
-            
-            unitSelect.addEventListener('change', () => {
-                units = unitSelect.value;
-                getWeather(currentCity);
-            });
-            
-            dailyBtn.addEventListener('click', () => {
-                if (currentForecastType !== 'daily') {
-                    currentForecastType = 'daily';
-                    dailyBtn.classList.add('active');
-                    hourlyBtn.classList.remove('active');
-                    forecastContainer.style.display = 'grid';
-                    hourlyForecast.style.display = 'none';
-                }
-            });
-            
-            hourlyBtn.addEventListener('click', () => {
-                if (currentForecastType !== 'hourly') {
-                    currentForecastType = 'hourly';
-                    hourlyBtn.classList.add('active');
-                    dailyBtn.classList.remove('active');
-                    forecastContainer.style.display = 'none';
-                    hourlyForecast.style.display = 'block';
-                    displayHourlyForecast();
-                }
-            });
-            
-            // Функции
-            async function getWeather(city) {
-                try {
-                    errorMessage.classList.add('hidden');
-                    
-                    // Получаем текущую погоду
-                    const currentResponse = await fetch(
-                        `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=${units}&appid=${apiKey}&lang=ru`
-                    );
-                    
-                    if (!currentResponse.ok) {
-                        throw new Error('Город не найден');
-                    }
-                    
-                    const currentData = await currentResponse.json();
-                    currentCity = currentData.name;
-                    cityInput.value = currentCity;
-                    displayCurrentWeather(currentData);
-                    
-                    // Получаем прогноз на 5 дней (почасовой)
-                    const forecastResponse = await fetch(
-                        `https://api.openweathermap.org/data/2.5/forecast?q=${city}&units=${units}&appid=${apiKey}&lang=ru`
-                    );
-                    
-                    const forecastData = await forecastResponse.json();
-                    hourlyForecastData = forecastData.list;
-                    displayForecast(forecastData);
-                    
-                } catch (error) {
-                    errorMessage.textContent = error.message;
-                    errorMessage.classList.remove('hidden');
-                    console.error('Ошибка:', error);
-                }
-            }
-            
-            function displayCurrentWeather(data) {
-                currentCityElement.textContent = `${data.name}, ${data.sys.country}`;
-                currentDateElement.textContent = formatDate(new Date());
-                
-                const temp = Math.round(data.main.temp);
-                const feelsLike = Math.round(data.main.feels_like);
-                currentTempElement.textContent = `${temp}${getUnitSymbol()}`;
-                currentFeelsLike.textContent = `Ощущается как: ${feelsLike}${getUnitSymbol()}`;
-                
-                const description = data.weather[0].description;
-                currentDescription.textContent = description.charAt(0).toUpperCase() + description.slice(1);
-                
-                const iconCode = data.weather[0].icon;
-                currentWeatherIcon.src = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
-                currentWeatherIcon.alt = description;
-                
-                humidityElement.textContent = `Влажность: ${data.main.humidity}%`;
-                windElement.textContent = `Ветер: ${data.wind.speed} ${units === 'metric' ? 'м/с' : 'миль/ч'}`;
-                pressureElement.textContent = `Давление: ${data.main.pressure} hPa`;
-                visibilityElement.textContent = `Видимость: ${data.visibility / 1000} км`;
-            }
-            
-function displayForecast(data) {
-    forecastContainer.innerHTML = '';
-    
-    // Группируем прогноз по дням
-    const dailyForecast = {};
-    data.list.forEach(item => {
-        const date = new Date(item.dt * 1000);
-        const dateKey = date.toLocaleDateString('ru-RU');
-        
-        if (!dailyForecast[dateKey]) {
-            dailyForecast[dateKey] = {
-                date: date,
-                temps: [],
-                feels_like: [],
-                icons: [],
-                descriptions: [],
-                humidity: [],
-                wind: [],
-                pressure: []
-            };
-        }
-        
-        dailyForecast[dateKey].temps.push(item.main.temp);
-        dailyForecast[dateKey].feels_like.push(item.main.feels_like);
-        dailyForecast[dateKey].icons.push(item.weather[0].icon);
-        dailyForecast[dateKey].descriptions.push(item.weather[0].description);
-        dailyForecast[dateKey].humidity.push(item.main.humidity);
-        dailyForecast[dateKey].wind.push(item.wind.speed);
-        dailyForecast[dateKey].pressure.push(item.main.pressure);
-    });
+      const currentCityElement = document.getElementById('current-city');
+      const currentDateElement = document.getElementById('current-date');
+      const currentTempElement = document.getElementById('current-temp');
+      const currentWeatherIcon = document.getElementById('current-weather-icon');
+      const currentDescription = document.getElementById('current-description');
+      const currentFeelsLike = document.getElementById('current-feels-like');
+      const humidityElement = document.getElementById('humidity');
+      const windElement = document.getElementById('wind');
+      const pressureElement = document.getElementById('pressure');
+      const visibilityElement = document.getElementById('visibility');
 
-    const forecastDays = Object.values(dailyForecast).slice(0, 5);
-    
-    forecastDays.forEach((dayData, index) => {
-        const maxTemp = Math.round(Math.max(...dayData.temps));
-        const minTemp = Math.round(Math.min(...dayData.temps));
-        const avgFeelsLike = Math.round(dayData.feels_like.reduce((a, b) => a + b, 0) / dayData.feels_like.length);
-        const avgHumidity = Math.round(dayData.humidity.reduce((a, b) => a + b, 0) / dayData.humidity.length);
-        const avgWind = (dayData.wind.reduce((a, b) => a + b, 0) / dayData.wind.length).toFixed(1);
-        const avgPressure = Math.round(dayData.pressure.reduce((a, b) => a + b, 0) / dayData.pressure.length);
-        const date = dayData.date;
+      function getUnitSymbol() {
+        return units === 'metric' ? '°C' : '°F';
+      }
+
+      async function getWeather(city) {
+        localStorage.setItem('lastCity', city);
+        const resp1 = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&units=${units}&appid=${apiKey}&lang=ru`);
+        const data1 = await resp1.json();
+        displayCurrentWeather(data1);
+
+        const resp2 = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&units=${units}&appid=${apiKey}&lang=ru`);
+        const data2 = await resp2.json();
+        displayHourlyForecast(data2);
+        displayForecast(data2);
+      }
+
+      function displayCurrentWeather(data) {
+        currentCityElement.textContent = `${data.name}, ${data.sys.country}`;
+        currentDateElement.textContent = new Date().toLocaleString('ru-RU');
+        currentTempElement.textContent = `${Math.round(data.main.temp)}${getUnitSymbol()}`;
+        currentFeelsLike.textContent = `Ощущается как: ${Math.round(data.main.feels_like)}${getUnitSymbol()}`;
+        currentWeatherIcon.src = `https://openweathermap.org/img/wn/${data.weather[0].icon}.png`;
+        currentWeatherIcon.alt = data.weather[0].description;
+        currentDescription.textContent = data.weather[0].description;
+        humidityElement.textContent = `Влажность: ${data.main.humidity}%`;
+        windElement.textContent = `Ветер: ${data.wind.speed} ${units === 'metric' ? 'м/с' : 'миль/ч'}`;
+        pressureElement.textContent = `Давление: ${data.main.pressure} hPa`;
+        visibilityElement.textContent = `Видимость: ${data.visibility / 1000} км`;
+      }
+
+      function displayHourlyForecast(data) {
+        hourlyContainer.innerHTML = '';
+        const hourlyData = data.list.slice(0, 8);
         
-        // Выбираем наиболее частую иконку
-        const iconCounts = {};
-        dayData.icons.forEach(icon => {
-            iconCounts[icon] = (iconCounts[icon] || 0) + 1;
+        hourlyData.forEach(item => {
+          const date = new Date(item.dt * 1000);
+          const time = date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+          const temp = Math.round(item.main.temp);
+          const icon = item.weather[0].icon;
+          const desc = item.weather[0].description;
+          const feels = Math.round(item.main.feels_like);
+          const wind = item.wind.speed.toFixed(1);
+          const humidity = item.main.humidity;
+
+          const itemElement = document.createElement('div');
+          itemElement.className = 'hourly-item';
+          itemElement.innerHTML = `
+            <div>${time}</div>
+            <img src="https://openweathermap.org/img/wn/${icon}.png" alt="${desc}">
+            <div>${temp}${getUnitSymbol()}</div>
+            <div style="font-size:12px;margin-top:5px;">Ощущается: ${feels}${getUnitSymbol()}</div>
+            <div style="font-size:12px">Ветер: ${wind} ${units === 'metric' ? 'м/с' : 'миль/ч'}</div>
+            <div style="font-size:12px">Влажность: ${humidity}%</div>
+          `;
+          hourlyContainer.appendChild(itemElement);
         });
-        const mostCommonIcon = Object.keys(iconCounts).reduce((a, b) =>
-            iconCounts[a] > iconCounts[b] ? a : b
-        );
+      }
+
+      function displayForecast(data) {
+        forecastContainer.innerHTML = '';
+        const daily = {};
+        data.list.forEach(item => {
+          const date = new Date(item.dt * 1000);
+          const key = date.toLocaleDateString('ru-RU');
+          if (!daily[key]) daily[key] = { date, temps: [], feels: [], icons: [], descriptions: [], humidity: [], wind: [], pressure: [] };
+          daily[key].temps.push(item.main.temp);
+          daily[key].feels.push(item.main.feels_like);
+          daily[key].icons.push(item.weather[0].icon);
+          daily[key].descriptions.push(item.weather[0].description);
+          daily[key].humidity.push(item.main.humidity);
+          daily[key].wind.push(item.wind.speed);
+          daily[key].pressure.push(item.main.pressure);
+        });
         
-        let dayName;
-        if (index === 0) {
-            dayName = "Сегодня";
-        } else if (index === 1) {
-            dayName = "Завтра";
-        } else {
-            dayName = date.toLocaleDateString('ru-RU', { weekday: 'long' });
-            dayName = dayName.charAt(0).toUpperCase() + dayName.slice(1);
-        }
-        
-        const forecastItem = document.createElement('div');
-        forecastItem.className = 'forecast-item';
-        forecastItem.innerHTML = `
+        Object.values(daily).slice(0, 5).forEach((d, i) => {
+          const max = Math.round(Math.max(...d.temps));
+          const min = Math.round(Math.min(...d.temps));
+          const feels = Math.round(d.feels.reduce((a, b) => a + b, 0) / d.feels.length);
+          const hum = Math.round(d.humidity.reduce((a, b) => a + b, 0) / d.humidity.length);
+          const wind = (d.wind.reduce((a, b) => a + b, 0) / d.wind.length).toFixed(1);
+          const pres = Math.round(d.pressure.reduce((a, b) => a + b, 0) / d.pressure.length);
+          const icon = d.icons.sort((a, b) => d.icons.filter(v => v === b).length - d.icons.filter(v => v === a).length)[0];
+          const desc = d.descriptions[0];
+          const dayName = i === 0 ? 'Сегодня' : i === 1 ? 'Завтра' : d.date.toLocaleDateString('ru-RU', { weekday: 'long' });
+
+          const item = document.createElement('div');
+          item.className = 'forecast-item';
+          item.innerHTML = `
             <div class="forecast-day">${dayName}</div>
-            <div class="forecast-date">${date.toLocaleDateString('ru-RU')}</div>
-            <img src="https://openweathermap.org/img/wn/${mostCommonIcon}.png"
-                 alt="${dayData.descriptions[0]}" title="${dayData.descriptions[0]}">
+            <div class="forecast-date">${d.date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}</div>
+            <img class="weather-icon" src="https://openweathermap.org/img/wn/${icon}.png" alt="${desc}">
             <div class="forecast-temp">
-                <span class="high">${maxTemp}${getUnitSymbol()}</span>
-                <span class="low">${minTemp}${getUnitSymbol()}</span>
+              <span class="high">${max}${getUnitSymbol()}</span>
+              <span class="low">${min}${getUnitSymbol()}</span>
             </div>
             <div class="forecast-details">
-                <div>Ощущается: ${avgFeelsLike}${getUnitSymbol()}</div>
-                <div>Влажность: ${avgHumidity}%</div>
-                <div>Ветер: ${avgWind} ${units === 'metric' ? 'м/с' : 'миль/ч'}</div>
-                <div>Давление: ${avgPressure} hPa</div>
+              <div>${desc}</div>
+              <div>Ощущается: ${feels}${getUnitSymbol()}</div>
+              <div>Влажность: ${hum}%</div>
+              <div>Ветер: ${wind} ${units === 'metric' ? 'м/с' : 'миль/ч'}</div>
+              <div>Давление: ${pres} hPa</div>
             </div>
-        `;
-        forecastContainer.appendChild(forecastItem);
-    });
-}
-
-            
-            function displayHourlyForecast() {
-                hourlyContainer.innerHTML = '';
-                
-                // Показываем прогноз на ближайшие 24 часа (8 интервалов по 3 часа)
-                const hourlyData = hourlyForecastData.slice(0, 8);
-                
-                hourlyData.forEach(item => {
-                    const date = new Date(item.dt * 1000);
-                    const time = date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-                    const temp = Math.round(item.main.temp);
-                    const icon = item.weather[0].icon;
-                    const description = item.weather[0].description;
-                    const pop = Math.round(item.pop * 100); // Вероятность осадков в %
-                    const wind = item.wind.speed.toFixed(1);
-                    const rain = item.rain ? item.rain['3h'] : 0;
-                    const snow = item.snow ? item.snow['3h'] : 0;
-                    
-                    const hourlyItem = document.createElement('div');
-                    hourlyItem.className = 'hourly-item';
-                    hourlyItem.innerHTML = `
-                        <div class="hourly-time">${time}</div>
-                        <div class="hourly-temp">${temp}${getUnitSymbol()}</div>
-                        <img src="https://openweathermap.org/img/wn/${icon}.png" 
-                             alt="${description}" class="hourly-icon" title="${description}">
-                        <div class="hourly-details">
-                            ${pop > 0 ? `<div>Вероятность осадков: ${pop}%</div>` : ''}
-                            ${rain > 0 ? `<div>Дождь: ${rain} мм</div>` : ''}
-                            ${snow > 0 ? `<div>Снег: ${snow} мм</div>` : ''}
-                            <div>Ветер: ${wind} ${units === 'metric' ? 'м/с' : 'миль/ч'}</div>
-                        </div>
-                    `;
-                    
-                    hourlyContainer.appendChild(hourlyItem);
-                });
-            }
-            
-            function updateFavoritesList() {
-                favoritesContainer.innerHTML = '';
-                
-                favorites.forEach(city => {
-                    const favoriteItem = document.createElement('div');
-                    favoriteItem.className = 'favorite-item';
-                    favoriteItem.textContent = city;
-                    
-                    favoriteItem.addEventListener('click', () => {
-                        getWeather(city);
-                    });
-                    
-                    // Добавляем кнопку удаления
-                    const deleteBtn = document.createElement('span');
-                    deleteBtn.textContent = ' ×';
-                    deleteBtn.style.marginLeft = '5px';
-                    deleteBtn.style.cursor = 'pointer';
-                    
-                    deleteBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        favorites = favorites.filter(fav => fav !== city);
-                        localStorage.setItem('weatherFavorites', JSON.stringify(favorites));
-                        updateFavoritesList();
-                    });
-                    
-                    favoriteItem.appendChild(deleteBtn);
-                    favoritesContainer.appendChild(favoriteItem);
-                });
-            }
-            
-            function formatDate(date) {
-                const options = { 
-                    weekday: 'long', 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                };
-                return date.toLocaleDateString('ru-RU', options);
-            }
-            
-            function getUnitSymbol() {
-                return units === 'metric' ? '°C' : '°F';
-            }
+          `;
+          forecastContainer.appendChild(item);
         });
-    </script>
+      }
+
+      document.getElementById('search-btn').onclick = () => {
+        const city = cityInput.value.trim();
+        if (city) getWeather(city);
+      };
+      document.getElementById('unit-select').onchange = e => {
+        units = e.target.value;
+        getWeather(currentCity);
+      };
+      document.getElementById('geo-btn').onclick = () => {
+        navigator.geolocation.getCurrentPosition(pos => {
+          const { latitude, longitude } = pos.coords;
+          fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&units=${units}&appid=${apiKey}&lang=ru`)
+            .then(r => r.json()).then(d => getWeather(d.name));
+        });
+      };
+      document.getElementById('add-favorite-btn').onclick = () => {
+        if (currentCity && !favorites.includes(currentCity)) {
+          favorites.push(currentCity);
+          localStorage.setItem('weatherFavorites', JSON.stringify(favorites));
+          alert('Город добавлен в избранное');
+        }
+      };
+      const themeBtn = document.createElement('button');
+      themeBtn.textContent = '🌓 Тема';
+      themeBtn.onclick = () => {
+        const d = document.documentElement;
+        const isDark = d.getAttribute('data-theme') === 'dark';
+        d.setAttribute('data-theme', isDark ? '' : 'dark');
+        localStorage.setItem('theme', isDark ? 'light' : 'dark');
+      };
+      document.querySelector('header').appendChild(themeBtn);
+      if (localStorage.getItem('theme') === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+      getWeather(currentCity);
+    });
+  </script>
 </body>
 </html>
