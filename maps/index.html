@@ -1,1 +1,272 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Карта с измерением расстояний - Сумы</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { height: 100vh; width: 100%; }
+        #controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            max-width: 300px;
+        }
+        button { margin: 5px; padding: 5px 10px; }
+        input { width: 100%; padding: 5px; margin: 5px 0; }
+        .info { margin: 5px 0; font-size: 14px; color: #555; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div id="controls">
+        <input type="text" id="search" placeholder="Поиск места (например, ул. Соборная, Сумы)">
+        <button id="clear-markers">Очистить карту</button>
+        <div class="info">Кликните на карту, чтобы добавить точку</div>
+        <div id="distance-info"></div>
+    </div>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+// Инициализация карты (центр на Сумы по умолчанию)
+const map = L.map('map').setView([50.9077, 34.7981], 13);
+
+// Добавляем слой OpenStreetMap
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+}).addTo(map);
+
+// Массив для хранения маркеров
+const markers = [];
+// Массив для хранения линий
+const lines = [];
+// Массив для временных маркеров поиска
+const tempMarkers = [];
+
+// Функция для расчета расстояния между двумя точками (в км)
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Радиус Земли в км
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+}
+
+// Функция для обновления информации о расстоянии
+function updateDistanceInfo() {
+    const distanceInfo = document.getElementById('distance-info');
+    
+    if (markers.length < 2) {
+        distanceInfo.innerHTML = '<div class="info">Добавьте хотя бы 2 точки (клик на карте) для измерения расстояния</div>';
+        return;
+    }
+    
+    let totalDistance = 0;
+    let html = '<h4>Расстояния между точками:</h4><ul>';
+    
+    // Рассчитываем расстояния между всеми точками по порядку
+    for (let i = 0; i < markers.length - 1; i++) {
+        const marker1 = markers[i];
+        const marker2 = markers[i + 1];
+        const distance = calculateDistance(
+            marker1.getLatLng().lat,
+            marker1.getLatLng().lng,
+            marker2.getLatLng().lat,
+            marker2.getLatLng().lng
+        );
+        
+        totalDistance += distance;
+        html += `<li>От точки ${i+1} до точки ${i+2}: <strong>${distance.toFixed(2)} км</strong></li>`;
+    }
+    
+    if (markers.length > 2) {
+        html += `<li class="total">Общее расстояние: <strong>${totalDistance.toFixed(2)} км</strong></li>`;
+    }
+    
+    html += '</ul>';
+    distanceInfo.innerHTML = html;
+}
+
+// Функция добавления маркера
+function addMarker(latlng) {
+    const marker = L.marker(latlng, {
+        draggable: true
+    }).addTo(map);
+    
+    // Добавляем подпись с номером точки
+    marker.bindPopup(`Точка ${markers.length + 1}<br>${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`).openPopup();
+    
+    // Добавляем маркер в массив
+    markers.push(marker);
+    
+    // Обновляем линии
+    updateLines();
+    
+    // Обновляем информацию о расстоянии
+    updateDistanceInfo();
+    
+    // Обработчик перемещения маркера
+    marker.on('drag', function() {
+        marker.setPopupContent(`Точка ${markers.indexOf(marker) + 1}<br>${marker.getLatLng().lat.toFixed(6)}, ${marker.getLatLng().lng.toFixed(6)}`);
+        updateLines();
+        updateDistanceInfo();
+    });
+}
+
+// Функция обновления линий между точками
+function updateLines() {
+    // Удаляем все существующие линии
+    lines.forEach(line => map.removeLayer(line));
+    lines.length = 0;
+    
+    // Создаем новые линии между всеми точками
+    for (let i = 0; i < markers.length - 1; i++) {
+        const line = L.polyline([
+            markers[i].getLatLng(),
+            markers[i + 1].getLatLng()
+        ], { color: 'blue', weight: 3 }).addTo(map);
+        
+        lines.push(line);
+    }
+}
+
+// Добавление маркера по клику на карту
+map.on('click', function(e) {
+    addMarker(e.latlng);
+});
+
+// Обработчик кнопки "Очистить карту"
+document.getElementById('clear-markers').addEventListener('click', function() {
+    // Удаляем основные маркеры и линии
+    markers.forEach(marker => map.removeLayer(marker));
+    lines.forEach(line => map.removeLayer(line));
+    markers.length = 0;
+    lines.length = 0;
+    
+    // Удаляем временные маркеры поиска
+    tempMarkers.forEach(marker => map.removeLayer(marker));
+    tempMarkers.length = 0;
+    
+    document.getElementById('distance-info').innerHTML = '<div class="info">Добавьте точки на карту для измерения расстояний</div>';
+    document.getElementById('search').value = '';
+});
+
+// Функция для поиска мест
+document.getElementById('search').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        const query = this.value.trim();
+        if (query.length < 2) {
+            alert('Введите минимум 2 символа для поиска');
+            return;
+        }
+        
+        // Показываем loading-сообщение
+        const searchInfo = document.createElement('div');
+        searchInfo.className = 'info';
+        searchInfo.textContent = 'Идёт поиск...';
+        document.getElementById('controls').appendChild(searchInfo);
+        
+        // Удаляем предыдущие временные маркеры
+        tempMarkers.forEach(marker => map.removeLayer(marker));
+        tempMarkers.length = 0;
+        
+        // Используем прокси для CORS (можно заменить на ваш сервер)
+        const nominatimUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&accept-language=ru&limit=5`;
+        const corsProxy = 'https://api.allorigins.win/raw?url=';
+        
+        fetch(corsProxy + encodeURIComponent(nominatimUrl))
+            .then(response => {
+                if (!response.ok) throw new Error('Ошибка сети');
+                return response.json();
+            })
+            .then(data => {
+                // Удаляем сообщение о загрузке
+                document.getElementById('controls').removeChild(searchInfo);
+                
+                if (data.length > 0) {
+                    const result = data[0];
+                    map.setView([result.lat, result.lon], 16);
+                    
+                    // Создаём временный маркер для найденного места
+                    const tempMarker = L.marker([result.lat, result.lon], {
+                        icon: L.divIcon({
+                            className: 'temp-marker',
+                            html: '📍',
+                            iconSize: [30, 30]
+                        })
+                    }).addTo(map);
+                    
+                    tempMarker.bindPopup(`
+                        <b>${result.display_name || 'Найденное место'}</b><br>
+                        <small>${result.lat}, ${result.lon}</small>
+                        <button onclick="removeTempMarker(this)">Закрыть</button>
+                    `).openPopup();
+                    
+                    tempMarkers.push(tempMarker);
+                } else {
+                    alert('Место не найдено. Попробуйте уточнить запрос.');
+                }
+            })
+            .catch(error => {
+                document.getElementById('controls').removeChild(searchInfo);
+                console.error('Ошибка поиска:', error);
+                alert('Ошибка при поиске. Проверьте соединение или попробуйте позже.');
+            });
+    }
+});
+
+// Функция для удаления временных маркеров
+window.removeTempMarker = function(button) {
+    const marker = button.parentElement._marker;
+    map.removeLayer(marker);
+    tempMarkers.splice(tempMarkers.indexOf(marker), 1);
+};
+
+// Добавляем стили для элементов
+const style = document.createElement('style');
+style.textContent = `
+    .temp-marker {
+        font-size: 20px;
+        text-align: center;
+    }
+    .leaflet-popup-content button {
+        margin-top: 5px;
+        padding: 3px 8px;
+        background: #f0f0f0;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        cursor: pointer;
+    }
+    .leaflet-popup-content button:hover {
+        background: #e0e0e0;
+    }
+    #distance-info ul {
+        padding-left: 15px;
+    }
+    #distance-info li {
+        margin: 3px 0;
+    }
+    #distance-info li.total {
+        margin-top: 5px;
+        padding-top: 5px;
+        border-top: 1px solid #eee;
+    }
+`;
+document.head.appendChild(style);
+
+// Инициализируем информационное сообщение
+document.getElementById('distance-info').innerHTML = '<div class="info">Добавьте точки на карту для измерения расстояний</div>';
+    </script>
+</body>
+</html>
