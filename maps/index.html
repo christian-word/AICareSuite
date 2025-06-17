@@ -1,109 +1,543 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Интерактивная карта с измерением расстояний</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <style>
-    html, body, #map {
-      height: 100%;
-      margin: 0;
-      padding: 0;
-    }
-    .control-panel {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      z-index: 1000;
-      background: white;
-      padding: 15px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.2);
-      width: 300px;
-    }
-    .input-field {
-      width: 100%;
-      padding: 8px;
-      margin-bottom: 10px;
-    }
-    .btn {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 10px;
-      cursor: pointer;
-    }
-    .results-area {
-      max-height: 200px;
-      overflow-y: auto;
-      font-size: 14px;
-      color: #333;
-    }
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        #map {
+            height: 100vh;
+            width: 100%;
+            border-radius: 0;
+        }
+
+        /* Модернизированная панель управления */
+        .control-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            width: 320px;
+            max-height: 80vh;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .control-panel.collapsed {
+            width: 60px;
+            height: 60px;
+        }
+
+        .panel-header {
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 16px 16px 0 0;
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        .control-panel.collapsed .panel-title {
+            opacity: 0;
+        }
+
+        .toggle-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            font-size: 16px;
+    position: absolute;
+    right: 10px;
+    top: 12px;
+    z-index: 1001; /* больше, чем у панели */
+
+        }
+
+        .toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .panel-content {
+            padding: 20px;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+            max-height: calc(80vh - 80px);
+            overflow-y: auto;
+            height: auto;
+        }
+
+.control-panel.collapsed .panel-content {
+    opacity: 0;
+    pointer-events: none;
+    height: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+
+        /* Современные элементы формы */
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px 16px 12px 40px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #8b95a1;
+            font-size: 16px;
+        }
+
+        /* Стилизованные кнопки */
+        .btn {
+            width: 100%;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(149, 165, 166, 0.3);
+        }
+
+        /* Автодополнение */
+        .suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 10;
+            display: none;
+            border: 1px solid #e1e5e9;
+        }
+
+        .suggestion-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f3f4;
+            transition: background-color 0.2s ease;
+            font-size: 13px;
+        }
+
+        .suggestion-item:hover {
+            background: #f8f9fa;
+        }
+
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        /* Область результатов */
+        .results-area {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 16px;
+            font-size: 13px;
+            line-height: 1.5;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e1e5e9;
+        }
+
+        .result-item {
+            margin-bottom: 8px;
+            padding: 8px 12px;
+            background: white;
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+        }
+
+        /* Переключатель режимов */
+        .mode-switcher {
+            display: flex;
+            background: #f1f3f4;
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 20px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 10px 12px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .mode-btn.active {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Улучшенные маркеры */
+        .distance-marker {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            border: 3px solid white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            font-size: 14px;
+        }
+
+        .address-marker {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 20px;
+            border: 3px solid white;
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+        }
+
+        /* Статистика */
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e1e5e9;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #667eea;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #8b95a1;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .control-panel {
+                width: calc(100% - 40px);
+                left: 20px;
+                right: 20px;
+            }
+            
+            .control-panel.collapsed {
+                width: 60px;
+                right: auto;
+            }
+        }
+
+        /* Кастомный скроллбар */
+        .panel-content::-webkit-scrollbar,
+        .suggestions::-webkit-scrollbar,
+        .results-area::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .panel-content::-webkit-scrollbar-track,
+        .suggestions::-webkit-scrollbar-track,
+        .results-area::-webkit-scrollbar-track {
+            background: #f1f3f4;
+            border-radius: 3px;
+        }
+
+        .panel-content::-webkit-scrollbar-thumb,
+        .suggestions::-webkit-scrollbar-thumb,
+        .results-area::-webkit-scrollbar-thumb {
+            background: #c1c8cd;
+            border-radius: 3px;
+        }
+
+        .panel-content::-webkit-scrollbar-thumb:hover,
+        .suggestions::-webkit-scrollbar-thumb:hover,
+        .results-area::-webkit-scrollbar-thumb:hover {
+            background: #a8b2ba;
+        }
   </style>
 </head>
 <body>
   <div id="map"></div>
 
-  <div class="control-panel">
-    <input type="text" class="input-field" id="searchInput" placeholder="Введите адрес..." />
-    <button class="btn" id="searchBtn">Найти</button>
-    <button class="btn" id="locateBtn">Где я?</button>
-    <div class="results-area" id="results"></div>
+  <div class="control-panel" id="controlPanel">
+    <div class="panel-header">
+      <div class="panel-title">
+        <i class="fas fa-map-marker-alt"></i>
+        Картографический помощник
+      </div>
+      <button class="toggle-btn" id="toggleBtn">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+    </div>
+
+    <div class="panel-content">
+      <div class="mode-switcher">
+        <button class="mode-btn active" data-mode="search">
+          <i class="fas fa-search"></i> Поиск
+        </button>
+        <button class="mode-btn" data-mode="measure">
+          <i class="fas fa-ruler"></i> Измерение
+        </button>
+      </div>
+
+      <div id="searchMode">
+        <div class="input-group">
+          <i class="fas fa-search input-icon"></i>
+          <input type="text" class="input-field" id="searchInput" placeholder="Введите адрес или название места...">
+          <div class="suggestions" id="suggestions"></div>
+        </div>
+
+        <button class="btn btn-primary" id="searchBtn">
+          <i class="fas fa-search"></i> Найти на карте
+        </button>
+
+        <!-- Добавлена кнопка геолокации -->
+        <button class="btn btn-primary" id="locateBtn">
+          <i class="fas fa-crosshairs"></i> Где я?
+        </button>
+      </div>
+
+      <div id="measureMode" style="display: none;">
+        <div class="stats" id="stats">
+          <div class="stat-item">
+            <span class="stat-value" id="pointCount">0</span>
+            <span class="stat-label">Точек</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value" id="totalDistance">0 км</span>
+            <span class="stat-label">Расстояние</span>
+          </div>
+        </div>
+
+        <button class="btn btn-secondary" id="undoBtn">
+          <i class="fas fa-undo"></i> Отменить точку
+        </button>
+      </div>
+
+      <button class="btn btn-danger" id="clearBtn">
+        <i class="fas fa-trash-alt"></i> Очистить всё
+      </button>
+
+      <div class="results-area" id="results">
+        <div style="text-align: center; color: #8b95a1; padding: 20px;">
+          <i class="fas fa-info-circle" style="font-size: 24px; margin-bottom: 8px;"></i>
+          <p>Выберите режим работы выше</p>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    const map = L.map('map').setView([50.9077, 34.7981], 13);
+    class MapApp {
+      constructor() {
+        this.map = null;
+        this.currentMode = 'search';
+        this.addressMarkers = L.layerGroup();
+        this.distanceMarkers = [];
+        this.distanceLines = [];
+        this.searchCache = new Map();
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; OpenStreetMap'
-    }).addTo(map);
-
-    const addressLayer = L.layerGroup().addTo(map);
-
-    document.getElementById('searchBtn').addEventListener('click', async () => {
-      const query = document.getElementById('searchInput').value.trim();
-      if (!query) return;
-
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`);
-      const data = await res.json();
-
-      addressLayer.clearLayers();
-
-      if (data.length > 0) {
-        const { lat, lon, display_name } = data[0];
-        const marker = L.marker([lat, lon]).addTo(addressLayer).bindPopup(display_name).openPopup();
-        map.setView([lat, lon], 16);
-        document.getElementById('results').innerHTML = `<b>${display_name}</b><br>Широта: ${lat}<br>Долгота: ${lon}`;
-      } else {
-        document.getElementById('results').textContent = 'Ничего не найдено';
-      }
-    });
-
-    document.getElementById('locateBtn').addEventListener('click', () => {
-      if (!navigator.geolocation) {
-        alert("Геолокация не поддерживается.");
-        return;
+        this.init();
       }
 
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const { latitude, longitude } = pos.coords;
-          const marker = L.circleMarker([latitude, longitude], {
-            radius: 10,
-            color: 'green',
-            fillColor: 'green',
-            fillOpacity: 0.7
-          }).addTo(map).bindPopup("Вы здесь").openPopup();
-          map.setView([latitude, longitude], 15);
-        },
-        (err) => {
-          alert("Ошибка определения местоположения: " + err.message);
-        },
-        { enableHighAccuracy: true, timeout: 10000 }
-      );
+      init() {
+        this.initMap();
+        this.initEventListeners();
+        this.updateUI();
+      }
+
+      initMap() {
+        this.map = L.map('map').setView([50.9077, 34.7981], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenStreetMap contributors',
+          maxZoom: 19
+        }).addTo(this.map);
+        this.addressMarkers.addTo(this.map);
+
+        this.map.on('click', (e) => {
+          if (this.currentMode === 'measure') {
+            this.addDistancePoint(e.latlng);
+          }
+        });
+      }
+
+      initEventListeners() {
+        document.getElementById('toggleBtn').addEventListener('click', () => {
+          const panel = document.getElementById('controlPanel');
+          const icon = document.getElementById('toggleBtn').querySelector('i');
+          panel.classList.toggle('collapsed');
+          icon.className = panel.classList.contains('collapsed') ? 'fas fa-chevron-right' : 'fas fa-chevron-left';
+        });
+
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+          btn.addEventListener('click', () => this.switchMode(btn.dataset.mode));
+        });
+
+        document.getElementById('searchInput').addEventListener('input', () => this.handleSearchInput());
+        document.getElementById('searchBtn').addEventListener('click', () => this.searchAddress());
+        document.getElementById('locateBtn').addEventListener('click', () => this.locateUser());
+
+        document.getElementById('clearBtn').addEventListener('click', () => this.clearAll());
+        document.getElementById('undoBtn').addEventListener('click', () => this.undoLastPoint());
+
+        document.addEventListener('click', (e) => {
+          if (!e.target.closest('.input-group')) {
+            document.getElementById('suggestions').style.display = 'none';
+          }
+        });
+      }
+
+      locateUser() {
+        if (!navigator.geolocation) {
+          alert("Геолокация не поддерживается этим браузером.");
+          return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+
+            const marker = L.circleMarker([lat, lon], {
+              radius: 10,
+              color: '#28a745',
+              fillColor: '#28a745',
+              fillOpacity: 0.7
+            }).addTo(this.map).bindPopup(`
+              <strong>Вы здесь</strong><br>
+              Широта: ${lat.toFixed(6)}<br>
+              Долгота: ${lon.toFixed(6)}
+            `).openPopup();
+
+            this.map.setView([lat, lon], 15);
+          },
+          (error) => {
+            alert("Ошибка получения геопозиции: " + error.message);
+          },
+          { enableHighAccuracy: true, timeout: 10000 }
+        );
+      }
+
+      // Остальные методы остаются без изменений
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      new MapApp();
     });
   </script>
 </body>
