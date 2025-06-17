@@ -1,11 +1,10 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Интерактивная карта с измерением расстояний</title>
-      <meta property="og:image" content="https://christian-word.github.io/AICareSuite/maps/maps.png" />
+    <meta property="og:image" content="https://christian-word.github.io/AICareSuite/maps/maps.png" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -407,6 +406,10 @@
                     <i class="fas fa-search"></i>
                     Найти на карте
                 </button>
+                
+                <button class="btn btn-primary" id="locateBtn">
+                    <i class="fas fa-crosshairs"></i> Где я?
+                </button>
             </div>
             
             <div id="measureMode" style="display: none;">
@@ -451,6 +454,7 @@
                 this.distanceMarkers = [];
                 this.distanceLines = [];
                 this.searchCache = new Map();
+                this.userLocationMarker = null;
                 
                 this.init();
             }
@@ -504,6 +508,9 @@
                 searchInput.addEventListener('input', () => this.handleSearchInput());
                 document.getElementById('searchBtn').addEventListener('click', () => this.searchAddress());
                 
+                // Кнопка геолокации
+                document.getElementById('locateBtn').addEventListener('click', () => this.locateUser());
+                
                 // Управляющие кнопки
                 document.getElementById('clearBtn').addEventListener('click', () => this.clearAll());
                 document.getElementById('undoBtn').addEventListener('click', () => this.undoLastPoint());
@@ -514,6 +521,51 @@
                         document.getElementById('suggestions').style.display = 'none';
                     }
                 });
+            }
+            
+            locateUser() {
+                if (!navigator.geolocation) {
+                    alert("Геолокация не поддерживается этим браузером.");
+                    return;
+                }
+                
+                // Удаляем предыдущий маркер местоположения, если он есть
+                if (this.userLocationMarker) {
+                    this.map.removeLayer(this.userLocationMarker);
+                }
+                
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+
+                        this.userLocationMarker = L.circleMarker([lat, lon], {
+                            radius: 10,
+                            color: '#28a745',
+                            fillColor: '#28a745',
+                            fillOpacity: 0.7
+                        }).addTo(this.map).bindPopup(`
+                            <strong>Вы здесь</strong><br>
+                            Широта: ${lat.toFixed(6)}<br>
+                            Долгота: ${lon.toFixed(6)}
+                        `).openPopup();
+
+                        this.map.setView([lat, lon], 15);
+                        
+                        // Обновляем информацию в панели результатов
+                        this.updateResults(`
+                            <div class="result-item">
+                                <strong>Ваше местоположение</strong><br>
+                                Широта: ${lat.toFixed(6)}<br>
+                                Долгота: ${lon.toFixed(6)}
+                            </div>
+                        `);
+                    },
+                    (error) => {
+                        alert("Ошибка получения геопозиции: " + error.message);
+                    },
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
             }
             
             switchMode(mode) {
@@ -803,6 +855,12 @@
                 // Очищаем линии
                 this.distanceLines.forEach(line => this.map.removeLayer(line));
                 this.distanceLines = [];
+                
+                // Очищаем маркер местоположения
+                if (this.userLocationMarker) {
+                    this.map.removeLayer(this.userLocationMarker);
+                    this.userLocationMarker = null;
+                }
                 
                 // Очищаем поля ввода
                 document.getElementById('searchInput').value = '';
