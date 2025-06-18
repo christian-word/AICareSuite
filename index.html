@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Менеджер Приложений</title>
+    <title>Менеджер приложений</title>
     <style>
         :root {
             --space: #0a0e17;
@@ -30,14 +30,10 @@
             color: var(--text);
             min-height: 100vh;
             font-family: 'Orbitron', 'Rajdhani', sans-serif;
-            overflow-x: hidden;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
         }
         
-        /* Звёздное поле */
         .stars {
             position: fixed;
             top: 0;
@@ -47,13 +43,12 @@
             z-index: -1;
         }
         
-        /* Контейнер с параллаксом */
         .teleport-container {
             width: 100%;
             max-width: 1400px;
             padding: 40px 20px;
-            transform-style: preserve-3d;
-            transition: transform 0.1s;
+            margin: 0 auto;
+            flex: 1;
         }
         
         header {
@@ -88,7 +83,6 @@
             width: 100%;
         }
         
-        /* Стили карточек */
         .teleport-card {
             background: var(--card-bg);
             border-radius: 15px;
@@ -101,11 +95,8 @@
             position: relative;
             overflow: hidden;
             border: 1px solid;
-            transform-style: preserve-3d;
-            animation: cardAppear 0.8s ease-out backwards;
         }
         
-        /* Индивидуальное свечение для каждой карточки */
         .teleport-card.ai-med {
             --glow: var(--glow-blue);
             border-color: rgba(0, 247, 255, 0.3);
@@ -123,30 +114,9 @@
             border-color: rgba(255, 247, 0, 0.3);
         }
         
-        .teleport-card::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(
-                45deg,
-                transparent,
-                rgba(255, 255, 255, 0.1),
-                transparent
-            );
-            transform: rotate(45deg);
-            transition: 0.7s;
-        }
-        
         .teleport-card:hover {
-            transform: translateY(-10px) scale(1.03);
+            transform: translateY(-10px);
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), var(--glow);
-        }
-        
-        .teleport-card:hover::before {
-            left: 100%;
         }
         
         .icon-holo {
@@ -159,7 +129,7 @@
         }
         
         .teleport-card:hover .icon-holo {
-            transform: scale(1.15) rotateY(20deg);
+            transform: scale(1.15);
         }
         
         .app-title {
@@ -186,47 +156,56 @@
             font-size: 0.9rem;
             font-weight: 700;
             box-shadow: 0 0 15px rgba(0, 255, 191, 0.7);
-            animation: pulse 2s infinite;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
         
-        /* Футер */
+        /* Стили для футера */
         footer {
-            margin-top: 50px;
-            text-align: center;
-            font-size: 0.9rem;
-            opacity: 0.7;
-            padding: 20px;
+            background: linear-gradient(to top, rgba(10, 14, 23, 0.9), transparent);
             color: var(--neon-blue);
-            text-shadow: 0 0 10px rgba(0, 247, 255, 0.3);
+            text-align: center;
+            padding: 25px 20px;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px rgba(0, 247, 255, 0.7);
+            border-top: 1px solid rgba(0, 247, 255, 0.3);
+            animation: footerGlow 3s infinite alternate;
+            position: relative;
+            overflow: hidden;
         }
         
-        /* Анимации */
+        footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 247, 255, 0.1), transparent);
+            animation: scanline 8s linear infinite;
+        }
+        
         @keyframes float {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-20px); }
         }
         
-        @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 15px rgba(0, 255, 191, 0.7); }
-            50% { box-shadow: 0 0 30px rgba(0, 255, 191, 0.9); }
+        @keyframes footerGlow {
+            0% { text-shadow: 0 0 10px rgba(0, 247, 255, 0.7); }
+            100% { text-shadow: 0 0 15px rgba(0, 247, 255, 0.9), 
+                           0 0 20px rgba(0, 247, 255, 0.5); }
         }
         
-        @keyframes cardAppear {
-            0% { opacity: 0; transform: translateY(50px) rotateX(30deg); }
-            100% { opacity: 1; transform: translateY(0) rotateX(0); }
+        @keyframes scanline {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
         }
         
-        /* Адаптация */
         @media (min-width: 1200px) {
             .teleport-grid {
                 grid-template-columns: repeat(4, 1fr);
             }
-            .teleport-card:nth-child(1) { animation-delay: 0.1s; }
-            .teleport-card:nth-child(2) { animation-delay: 0.2s; }
-            .teleport-card:nth-child(3) { animation-delay: 0.3s; }
-            .teleport-card:nth-child(4) { animation-delay: 0.4s; }
         }
         
         @media (min-width: 768px) and (max-width: 1199px) {
@@ -246,6 +225,10 @@
                 width: 80px;
                 height: 80px;
             }
+            footer {
+                font-size: 0.9rem;
+                padding: 15px 10px;
+            }
         }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
@@ -255,13 +238,13 @@
     
     <div class="teleport-container">
         <header>
-            <h1>Менеджер Приложений</h1>
-            <p class="subtitle">Профессиональные сервисы с искусственным интеллектом и полезными инструментами</p>
+            <h1>Менеджер приложений</h1>
+            <p class="subtitle">Профессиональные сервисы с искусственным интеллектом и полезными инструментами</p></p>
         </header>
         
         <div class="teleport-grid">
             <!-- Доктор АИ -->
-            <a href="https://christian-word.github.io/AICareSuite/MedAI/" class="teleport-card ai-med" style="color: var(--neon-blue);">
+            <a href="https://christian-word.github.io/AICareSuite/MedAI/index.html" class="teleport-card ai-med" style="color: var(--neon-blue);">
                 <img src="https://christian-word.github.io/AICareSuite/MedAI/MedA.jpg" alt="Доктор АИ" class="icon-holo">
                 <div class="app-title">Доктор АИ</div>
                 <div class="app-desc">Персональный медицинский ассистент с искусственным интеллектом для консультаций</div>
@@ -269,7 +252,7 @@
             </a>
             
             <!-- Повар АИ -->
-            <a href="https://christian-word.github.io/AICareSuite/CookAI/" class="teleport-card ai-cook" style="color: var(--neon-pink);">
+            <a href="https://christian-word.github.io/AICareSuite/CookAI/index.html" class="teleport-card ai-cook" style="color: var(--neon-pink);">
                 <img src="https://christian-word.github.io/AICareSuite/CookAI/CookAI.png" alt="Повар АИ" class="icon-holo">
                 <div class="app-title">Повар АИ</div>
                 <div class="app-desc">Умный кулинарный помощник для создания рецептов и планирования питания</div>
@@ -277,39 +260,37 @@
             </a>
             
             <!-- Погода -->
-            <a href="https://christian-word.github.io/AICareSuite/weather/" class="teleport-card weather" style="color: var(--neon-green);">
+            <a href="https://christian-word.github.io/AICareSuite/weather/index.html" class="teleport-card weather" style="color: var(--neon-green);">
                 <img src="https://christian-word.github.io/AICareSuite/weather/weather.png" alt="Погода" class="icon-holo">
-                <div class="app-title">Атмосферный сканер</div>
+                <div class="app-title">Атмосферный трекер погоды</div>
                 <div class="app-desc">Актуальная информация о погоде и подробный прогноз для вашего региона</div>
             </a>
             
             <!-- Интерактивная Карта -->
-            <a href="https://christian-word.github.io/AICareSuite/maps/" class="teleport-card map" style="color: var(--neon-yellow);">
+            <a href="https://christian-word.github.io/AICareSuite/maps/index.html" class="teleport-card map" style="color: var(--neon-yellow);">
                 <img src="https://christian-word.github.io/AICareSuite/maps/maps.png" alt="Карта" class="icon-holo">
-                <div class="app-title">Голокарта</div>
+                <div class="app-title">Интерактивная карта</div>
                 <div class="app-desc">Навигация, поиск мест и построение маршрутов, геолокация</div>
             </a>
         </div>
-        
-        <footer>
-            Сборник приложений версия (1.0), © г.Сумы 2025
-        </footer>
     </div>
 
+    <footer>
+        Сборник приложений версия (1.0), © г.Сумы 2025
+    </footer>
+
     <script>
-        // Инициализация звёздного поля
+        // Звёздное поле на Canvas
         document.addEventListener('DOMContentLoaded', () => {
-            const starsContainer = document.getElementById('stars');
             const canvas = document.createElement('canvas');
+            const starsContainer = document.getElementById('stars');
             starsContainer.appendChild(canvas);
             
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            
             const ctx = canvas.getContext('2d');
             const stars = [];
             
-            // Создаём 500 звёзд
             for (let i = 0; i < 500; i++) {
                 stars.push({
                     x: Math.random() * canvas.width,
@@ -329,46 +310,13 @@
                     ctx.fill();
                     
                     star.y += star.speed;
-                    if (star.y > canvas.height) {
-                        star.y = 0;
-                        star.x = Math.random() * canvas.width;
-                    }
+                    if (star.y > canvas.height) star.y = 0;
                 });
                 
                 requestAnimationFrame(animateStars);
             }
             
             animateStars();
-            
-            // Параллакс-эффект
-            document.addEventListener('mousemove', (e) => {
-                const x = (window.innerWidth / 2 - e.pageX) / 50;
-                const y = (window.innerHeight / 2 - e.pageY) / 50;
-                document.querySelector('.teleport-container').style.transform = 
-                    `rotateY(${x}deg) rotateX(${y}deg)`;
-            });
-            
-            // Звук при наведении
-            const cards = document.querySelectorAll('.teleport-card');
-            cards.forEach(card => {
-                card.addEventListener('mouseenter', () => {
-                    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                    const oscillator = audioCtx.createOscillator();
-                    const gainNode = audioCtx.createGain();
-                    
-                    oscillator.type = 'sine';
-                    oscillator.frequency.value = card.classList.contains('ai-med') ? 800 : 
-                                              card.classList.contains('ai-cook') ? 1000 :
-                                              card.classList.contains('weather') ? 600 : 400;
-                    
-                    gainNode.gain.value = 0.1;
-                    oscillator.connect(gainNode);
-                    gainNode.connect(audioCtx.destination);
-                    
-                    oscillator.start();
-                    oscillator.stop(audioCtx.currentTime + 0.1);
-                });
-            });
         });
     </script>
 </body>
