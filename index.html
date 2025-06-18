@@ -1,0 +1,360 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Менеджер Приложений</title>
+    <style>
+        :root {
+            --space: #0a0e17;
+            --neon-blue: #00f7ff;
+            --neon-pink: #ff00f7;
+            --neon-green: #00ff9d;
+            --neon-yellow: #fff700;
+            --text: #e0f7fa;
+            --card-bg: rgba(16, 42, 66, 0.3);
+            --glow-blue: 0 0 20px rgba(0, 247, 255, 0.7);
+            --glow-pink: 0 0 20px rgba(255, 0, 247, 0.5);
+            --glow-green: 0 0 20px rgba(0, 255, 157, 0.5);
+            --glow-yellow: 0 0 20px rgba(255, 247, 0, 0.5);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: var(--space);
+            color: var(--text);
+            min-height: 100vh;
+            font-family: 'Orbitron', 'Rajdhani', sans-serif;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Звёздное поле */
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        
+        /* Контейнер с параллаксом */
+        .teleport-container {
+            width: 100%;
+            max-width: 1400px;
+            padding: 40px 20px;
+            transform-style: preserve-3d;
+            transition: transform 0.1s;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            background: linear-gradient(90deg, var(--neon-blue), var(--neon-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 15px rgba(0, 247, 255, 0.5);
+            margin-bottom: 20px;
+        }
+        
+        .subtitle {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto;
+            text-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
+        }
+        
+        .teleport-grid {
+            display: grid;
+            gap: 30px;
+            width: 100%;
+        }
+        
+        /* Стили карточек */
+        .teleport-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 35px 30px;
+            text-align: center;
+            transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid;
+            transform-style: preserve-3d;
+            animation: cardAppear 0.8s ease-out backwards;
+        }
+        
+        /* Индивидуальное свечение для каждой карточки */
+        .teleport-card.ai-med {
+            --glow: var(--glow-blue);
+            border-color: rgba(0, 247, 255, 0.3);
+        }
+        .teleport-card.ai-cook {
+            --glow: var(--glow-pink);
+            border-color: rgba(255, 0, 247, 0.3);
+        }
+        .teleport-card.weather {
+            --glow: var(--glow-green);
+            border-color: rgba(0, 255, 157, 0.3);
+        }
+        .teleport-card.map {
+            --glow: var(--glow-yellow);
+            border-color: rgba(255, 247, 0, 0.3);
+        }
+        
+        .teleport-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                45deg,
+                transparent,
+                rgba(255, 255, 255, 0.1),
+                transparent
+            );
+            transform: rotate(45deg);
+            transition: 0.7s;
+        }
+        
+        .teleport-card:hover {
+            transform: translateY(-10px) scale(1.03);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), var(--glow);
+        }
+        
+        .teleport-card:hover::before {
+            left: 100%;
+        }
+        
+        .icon-holo {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 25px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 15px currentColor);
+            transition: transform 0.5s;
+        }
+        
+        .teleport-card:hover .icon-holo {
+            transform: scale(1.15) rotateY(20deg);
+        }
+        
+        .app-title {
+            font-size: 1.6rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px currentColor;
+        }
+        
+        .app-desc {
+            font-size: 1.1rem;
+            opacity: 0.8;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .ai-badge {
+            display: inline-block;
+            background: linear-gradient(90deg, var(--neon-blue), var(--neon-green));
+            color: var(--space);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            box-shadow: 0 0 15px rgba(0, 255, 191, 0.7);
+            animation: pulse 2s infinite;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        /* Анимации */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 15px rgba(0, 255, 191, 0.7); }
+            50% { box-shadow: 0 0 30px rgba(0, 255, 191, 0.9); }
+        }
+        
+        @keyframes cardAppear {
+            0% { opacity: 0; transform: translateY(50px) rotateX(30deg); }
+            100% { opacity: 1; transform: translateY(0) rotateX(0); }
+        }
+        
+        /* Адаптация */
+        @media (min-width: 1200px) {
+            .teleport-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            .teleport-card:nth-child(1) { animation-delay: 0.1s; }
+            .teleport-card:nth-child(2) { animation-delay: 0.2s; }
+            .teleport-card:nth-child(3) { animation-delay: 0.3s; }
+            .teleport-card:nth-child(4) { animation-delay: 0.4s; }
+        }
+        
+        @media (min-width: 768px) and (max-width: 1199px) {
+            .teleport-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 767px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+            .teleport-grid {
+                grid-template-columns: 1fr;
+            }
+            .icon-holo {
+                width: 80px;
+                height: 80px;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="stars" id="stars"></div>
+    
+    <div class="teleport-container">
+        <header>
+            <h1>Менеджер Приложений</h1>
+            <p class="subtitle">Профессиональные сервисы с искусственным интеллектом и полезными инструментами</p>
+        </header>
+        
+        <div class="teleport-grid">
+            <!-- Доктор АИ -->
+            <a href="https://christian-word.github.io/AICareSuite/MedAI/" class="teleport-card ai-med" style="color: var(--neon-blue);">
+                <img src="https://christian-word.github.io/AICareSuite/MedAI/MedA.jpg" alt="Доктор АИ" class="icon-holo">
+                <div class="app-title">Доктор АИ</div>
+                <div class="app-desc">Персональный медицинский ассистент с искусственным интеллектом для консультаций</div>
+                <span class="ai-badge">ИИ</span>
+            </a>
+            
+            <!-- Повар АИ -->
+            <a href="https://christian-word.github.io/AICareSuite/CookAI/" class="teleport-card ai-cook" style="color: var(--neon-pink);">
+                <img src="https://christian-word.github.io/AICareSuite/CookAI/CookAI.png" alt="Повар АИ" class="icon-holo">
+                <div class="app-title">Повар АИ</div>
+                <div class="app-desc">Умный кулинарный помощник для создания рецептов и планирования питания</div>
+                <span class="ai-badge">ИИ</span>
+            </a>
+            
+            <!-- Погода -->
+            <a href="https://christian-word.github.io/AICareSuite/weather/" class="teleport-card weather" style="color: var(--neon-green);">
+                <img src="https://christian-word.github.io/AICareSuite/weather/weather.png" alt="Погода" class="icon-holo">
+                <div class="app-title">Атмосферный сканер</div>
+                <div class="app-desc">Актуальная информация о погоде и подробный прогноз для вашего региона</div>
+            </a>
+            
+            <!-- Интерактивная Карта -->
+            <a href="https://christian-word.github.io/AICareSuite/maps/" class="teleport-card map" style="color: var(--neon-yellow);">
+                <img src="https://christian-word.github.io/AICareSuite/maps/maps.png" alt="Карта" class="icon-holo">
+                <div class="app-title">Голокарта</div>
+                <div class="app-desc">Навигация, поиск мест и построение маршрутов, геолокация</div>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Инициализация звёздного поля
+        document.addEventListener('DOMContentLoaded', () => {
+            const starsContainer = document.getElementById('stars');
+            const canvas = document.createElement('canvas');
+            starsContainer.appendChild(canvas);
+            
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            const ctx = canvas.getContext('2d');
+            const stars = [];
+            
+            // Создаём 500 звёзд
+            for (let i = 0; i < 500; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    radius: Math.random() * 1.5,
+                    speed: Math.random() * 0.2
+                });
+            }
+            
+            function animateStars() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'white';
+                
+                stars.forEach(star => {
+                    ctx.beginPath();
+                    ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    star.y += star.speed;
+                    if (star.y > canvas.height) {
+                        star.y = 0;
+                        star.x = Math.random() * canvas.width;
+                    }
+                });
+                
+                requestAnimationFrame(animateStars);
+            }
+            
+            animateStars();
+            
+            // Параллакс-эффект
+            document.addEventListener('mousemove', (e) => {
+                const x = (window.innerWidth / 2 - e.pageX) / 50;
+                const y = (window.innerHeight / 2 - e.pageY) / 50;
+                document.querySelector('.teleport-container').style.transform = 
+                    `rotateY(${x}deg) rotateX(${y}deg)`;
+            });
+            
+            // Звук при наведении
+            const cards = document.querySelectorAll('.teleport-card');
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', () => {
+                    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioCtx.createOscillator();
+                    const gainNode = audioCtx.createGain();
+                    
+                    oscillator.type = 'sine';
+                    oscillator.frequency.value = card.classList.contains('ai-med') ? 800 : 
+                                              card.classList.contains('ai-cook') ? 1000 :
+                                              card.classList.contains('weather') ? 600 : 400;
+                    
+                    gainNode.gain.value = 0.1;
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioCtx.destination);
+                    
+                    oscillator.start();
+                    oscillator.stop(audioCtx.currentTime + 0.1);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
